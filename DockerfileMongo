@@ -1,0 +1,17 @@
+FROM ubuntu:22.04
+
+
+RUN \
+    apt-get update && \
+    apt-get install -y wget libcurl4 tzdata && \
+    wget https://repo.mongodb.org/apt/ubuntu/dists/jammy/mongodb-org/7.0/multiverse/binary-amd64/mongodb-org-server_7.0.5_amd64.deb && \
+    dpkg --install mongodb-org-server_7.0.5_amd64.deb
+VOLUME ["/data/db"]
+
+COPY docker/mongo/mongod.conf /etc/mongod.conf
+
+WORKDIR /data
+
+CMD ["mongod", "--bind_ip_all"]
+
+EXPOSE 27017
