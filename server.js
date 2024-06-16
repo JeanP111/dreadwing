@@ -5,17 +5,24 @@ const { MongoClient, ObjectId } = require('mongodb');
 const app = express();
 const port = 3001;
 
-// Upewnij się, że connection string jest poprawny
-const uri = 'mongodb+srv://aaaa:aaaa@atlascluster.8zc3jdx.mongodb.net/Customers?retryWrites=true&w=majority';
+const uri = 'mongodb+srv://aaaa:aaaa@atlascluster.8zc3jdx.mongodb.net/Customers?retryWrites=true&w=majority&tlsAllowInvalidCertificates=true';
 
-const client = new MongoClient(uri);
+let client;
+
+async function connectToMongoDB() {
+  if (!client) {
+    client = new MongoClient(uri);
+    await client.connect();
+    console.log('Connected to MongoDB');
+  }
+}
 
 app.use(cors());
 app.use(express.json());
 
 app.get('/customers', async (req, res) => {
   try {
-    await client.connect();
+    await connectToMongoDB();
     const database = client.db('Customers');
     const customers = database.collection('Customers');
     const data = await customers.find({}).toArray();
@@ -23,14 +30,12 @@ app.get('/customers', async (req, res) => {
   } catch (error) {
     console.error('Błąd podczas pobierania danych graczy:', error);
     res.status(500).json({ error: 'Błąd podczas pobierania danych graczy', details: error.message });
-  } finally {
-    await client.close();
   }
 });
 
 app.post('/customers', async (req, res) => {
   try {
-    await client.connect();
+    await connectToMongoDB();
     const database = client.db('Customers');
     const customers = database.collection('Customers');
     const newCustomer = {
@@ -42,8 +47,6 @@ app.post('/customers', async (req, res) => {
   } catch (error) {
     console.error('Błąd podczas dodawania nowego gracza:', error);
     res.status(500).json({ error: 'Błąd podczas dodawania nowego gracza', details: error.message });
-  } finally {
-    await client.close();
   }
 });
 
